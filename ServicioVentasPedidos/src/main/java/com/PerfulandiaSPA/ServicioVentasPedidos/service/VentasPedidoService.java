@@ -45,14 +45,13 @@ public class VentasPedidoService {
         if (carrito == null){
             Carrito nuevoCarrito = new Carrito();
             nuevoCarrito.setClienteId(clienteId);
-            nuevoCarrito.setTotalTemporal(0);
             nuevoCarrito.setItems(null);
             carrito = carritoRepository.save(nuevoCarrito);
         }
 
         boolean productoExiste = false;
         for (ItemsCarrito item : carrito.getItems()) {
-            if (item.getProductoId().equals(carrito)){
+            if (item.getProductoId().equals(productoId)){
                 item.setCantidad(item.getCantidad() + cantidad);
                 productoExiste = true;
                 break;
@@ -61,9 +60,9 @@ public class VentasPedidoService {
 
         if (!productoExiste){
             ItemsCarrito nuevoItem = new ItemsCarrito();
-            nuevoItem.setProductoId(productoId);
+            nuevoItem.setProductoId(producto.getId());
             nuevoItem.setCantidad(cantidad);
-            nuevoItem.setPrecioUnitario(cantidad);
+            nuevoItem.setPrecioUnitario(producto.getPrecio());
             carrito.getItems().add(nuevoItem);
         }
 
@@ -72,7 +71,7 @@ public class VentasPedidoService {
             nuevoTotal = nuevoTotal + item.getPrecioUnitario();
         }
         carrito.setTotalTemporal(nuevoTotal);
-        return carritoRepository.save(null);
+        return carritoRepository.save(carrito);
     }
 
     public Pedido realizarPedido(Long carritoId){
