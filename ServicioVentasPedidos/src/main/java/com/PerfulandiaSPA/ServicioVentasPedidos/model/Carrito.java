@@ -26,11 +26,11 @@ public class Carrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "cliente_id", nullable = false)
+    @Column(name = "id_cliente", nullable = false)
     private Long clienteId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "carrito_id")
+    @JoinColumn(name = "id_carrito")
     private List<ItemsCarrito> items = new ArrayList<>();
 
     @Column(name = "total_temporal", nullable = false)

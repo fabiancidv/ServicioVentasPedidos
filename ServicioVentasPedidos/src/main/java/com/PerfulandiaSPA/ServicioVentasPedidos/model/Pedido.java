@@ -24,8 +24,11 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "cliente_id")
+    @Column(nullable = false, name = "id_cliente")
     private Long clienteId;
+
+    @Column(name = "id_factura", nullable = false)
+    private Long facturaId;
 
     private LocalDateTime fecha;
 
