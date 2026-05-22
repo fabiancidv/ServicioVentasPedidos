@@ -1,5 +1,7 @@
 package com.PerfulandiaSPA.ServicioVentasPedidos.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import com.PerfulandiaSPA.ServicioVentasPedidos.dto.FacturaDTO;
 import com.PerfulandiaSPA.ServicioVentasPedidos.dto.ProductoDTO;
 import com.PerfulandiaSPA.ServicioVentasPedidos.dto.StockDTO;
 import com.PerfulandiaSPA.ServicioVentasPedidos.model.Carrito;
@@ -29,8 +32,6 @@ public class VentasPedidoService {
     RestTemplate restTemplate;
 
     public Carrito agregarAlCarrito(Long productoId, int cantidad, Long clienteId, Long stockId){
-
-        
         String urlStock = "http://localhost:8081/api/v1/stocks/" + stockId;
         StockDTO stock = restTemplate.getForObject(urlStock, StockDTO.class);
 
@@ -45,7 +46,7 @@ public class VentasPedidoService {
         if (carrito == null){
             Carrito nuevoCarrito = new Carrito();
             nuevoCarrito.setClienteId(clienteId);
-            nuevoCarrito.setItems(null);
+            nuevoCarrito.setItems(new ArrayList<>());
             carrito = carritoRepository.save(nuevoCarrito);
         }
 
@@ -68,22 +69,49 @@ public class VentasPedidoService {
 
         double nuevoTotal = 0;
         for (ItemsCarrito item : carrito.getItems()) {
-            nuevoTotal = nuevoTotal + item.getPrecioUnitario();
+            nuevoTotal = nuevoTotal + item.getPrecioUnitario() * item.getCantidad();
         }
         carrito.setTotalTemporal(nuevoTotal);
         return carritoRepository.save(carrito);
     }
 
-    public Pedido realizarPedido(Long carritoId){
-        return
+    public Pedido realizarPedido(Long carritoId, String cupon){
+        Carrito carrito = carritoRepository.findById(carritoId).orElse(null);
+        if (carrito == null) {
+            return null;
+        }
+
+        String urlFactura ="http://localhost:8082/api/v1/facturas/" + carrito.getTotalTemporal(); //TODO conectar correctamente con factura
+        FacturaDTO factura = restTemplate.postForObject(urlFactura, FacturaDTO.class, null);
+
+        LocalDateTime fecha = LocalDateTime.now();
+        Pedido pedido = new Pedido();
+        pedido.setClienteId(carrito.getClienteId());
+        pedido.setFacturaId(factura.getId());
+        pedido.setFecha(fecha);
+        pedido.setTotal(carrito.getTotalTemporal());
+        pedido.setEstado(EstadoPedido.PENDIENTE);
+        pedido.setCuponAplicado(cupon);
+        pedidoRepository.save(pedido);
+
+        carrito.getItems().clear();
+        carrito.setTotalTemporal(0);
+        carritoRepository.save(carrito);
+
+        return pedido;
     }
 
     public EstadoPedido consultarEstado(Long pedidoId){
-        return
+        Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
+        if (pedido != null) {
+            return pedido.getEstado();
+        }
+        return null;
     }
 
     public List<Pedido> obtenerHistorialCompras(Long clienteId){
-        return
+        List<Pedido> listaPedidos = pedidoRepository.findByClienteId(clienteId);
+        return listaPedidos;
     }
 
     public Pedido registrarVenta(Long pedidoId, String metodoPago){

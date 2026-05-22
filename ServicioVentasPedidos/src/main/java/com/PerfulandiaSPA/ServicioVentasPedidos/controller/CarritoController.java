@@ -20,7 +20,7 @@ public class CarritoController {
     private VentasPedidoService ventasPedidoService;
 
     @PostMapping("{id}/{cantidad}/{clienteId}/{stockId}")
-    public ResponseEntity<?> agregarProducto(@PathVariable Long id, @PathVariable int cantidad, @PathVariable Long clienteId, @PathVariable Long stockId){
+    public ResponseEntity<?> postProducto(@PathVariable Long id, @PathVariable int cantidad, @PathVariable Long clienteId, @PathVariable Long stockId){
         Carrito productoAgregado = ventasPedidoService.agregarAlCarrito(id, cantidad, clienteId, stockId);
         return ResponseEntity.ok(productoAgregado);
     }
