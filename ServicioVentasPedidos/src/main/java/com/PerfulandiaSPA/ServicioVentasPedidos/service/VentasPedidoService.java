@@ -15,7 +15,9 @@ import com.PerfulandiaSPA.ServicioVentasPedidos.dto.StockDTO;
 import com.PerfulandiaSPA.ServicioVentasPedidos.model.Carrito;
 import com.PerfulandiaSPA.ServicioVentasPedidos.model.EstadoPedido;
 import com.PerfulandiaSPA.ServicioVentasPedidos.model.ItemsCarrito;
+import com.PerfulandiaSPA.ServicioVentasPedidos.model.MetodoPago;
 import com.PerfulandiaSPA.ServicioVentasPedidos.model.Pedido;
+import com.PerfulandiaSPA.ServicioVentasPedidos.model.TipoEnvio;
 import com.PerfulandiaSPA.ServicioVentasPedidos.repository.CarritoRepository;
 import com.PerfulandiaSPA.ServicioVentasPedidos.repository.PedidoRepository;
 
@@ -75,13 +77,13 @@ public class VentasPedidoService {
         return carritoRepository.save(carrito);
     }
 
-    public Pedido realizarPedido(Long carritoId, String cupon){
+    public Pedido realizarPedido(Long carritoId, String cupon, MetodoPago metodoPago, TipoEnvio tipoEnvio, String direccion){
         Carrito carrito = carritoRepository.findById(carritoId).orElse(null);
         if (carrito == null) {
             return null;
         }
 
-        String urlFactura ="http://localhost:8082/api/v1/facturas/" + carrito.getTotalTemporal(); //TODO conectar correctamente con factura
+        String urlFactura ="http://localhost:8082/api/v1/facturas/"; //TODO conectar correctamente con factura
         FacturaDTO factura = restTemplate.postForObject(urlFactura, FacturaDTO.class, null);
 
         LocalDateTime fecha = LocalDateTime.now();
@@ -91,7 +93,17 @@ public class VentasPedidoService {
         pedido.setFecha(fecha);
         pedido.setTotal(carrito.getTotalTemporal());
         pedido.setEstado(EstadoPedido.PENDIENTE);
+        pedido.setMetodoPago(metodoPago);
         pedido.setCuponAplicado(cupon);
+        pedido.setTipoEnvio(tipoEnvio);
+        if (tipoEnvio.equals(TipoEnvio.ENVIO_RAPIDO)) {
+            pedido.setCostoEnvio(5000);
+            pedido.setTotal(carrito.getTotalTemporal() + pedido.getCostoEnvio());
+        }
+        if (tipoEnvio.equals(TipoEnvio.ENVIO_ESTANDAR)) {
+            pedido.setCostoEnvio(0);
+        }
+        pedido.setDireccion(direccion);
         pedidoRepository.save(pedido);
 
         carrito.getItems().clear();
@@ -114,13 +126,22 @@ public class VentasPedidoService {
         return listaPedidos;
     }
 
-    public Pedido registrarVenta(Long pedidoId, String metodoPago){
-        return
+    public Pedido registrarVenta(Long pedidoId){
+        Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
+        if (pedido != null){
+            pedido.setEstado(EstadoPedido.APROBADO);
+            aplicarCupon(pedido);
+            pedidoRepository.save(pedido);
+        }
+        return null;
     }
 
-    public boolean aplicarCupon(){
-        return
+    public void aplicarCupon(Pedido pedido){
+        if (pedido.getCuponAplicado() != null){
+            double descuento = pedido.getTotal() * 0.8;
+            pedido.setTotal(descuento);
+            pedidoRepository.save(pedido);
+        }
     }
-
 
 }

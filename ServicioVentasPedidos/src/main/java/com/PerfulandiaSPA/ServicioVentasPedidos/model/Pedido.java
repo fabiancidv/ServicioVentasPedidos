@@ -39,6 +39,20 @@ public class Pedido {
     @Column(nullable = false)
     private EstadoPedido estado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "metodo_pago")
+    private MetodoPago metodoPago;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "tipo_envio")
+    private TipoEnvio TipoEnvio;
+
+    @Column(nullable = false, name = "costo_envio")
+    private double costoEnvio;
+
+    @Column(nullable = false, length = 250)
+    private String direccion;
+
     @Column(name = "cupon_aplicado")
     private String cuponAplicado;
 }
