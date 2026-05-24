@@ -1,6 +1,7 @@
 package com.PerfulandiaSPA.ServicioVentasPedidos.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,13 +28,19 @@ public class Pedido {
     @Column(nullable = false, name = "id_cliente")
     private Long clienteId;
 
-    @Column(name = "id_factura", nullable = false)
+    @Column(name = "id_factura")
     private Long facturaId;
 
     private LocalDateTime fecha;
 
+    @Column()
+    private double iva = 1.19;
+
     @Column(nullable = false)
-    private double total;
+    private List<Double> productoBruto;
+
+    @Column(nullable = false)
+    private List<Double> productoTotal;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -55,4 +62,7 @@ public class Pedido {
 
     @Column(name = "cupon_aplicado")
     private String cuponAplicado;
+
+    @Column(nullable = false)
+    private double total;
 }

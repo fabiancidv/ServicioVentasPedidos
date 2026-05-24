@@ -83,31 +83,40 @@ public class VentasPedidoService {
             return null;
         }
 
-        String urlFactura ="http://localhost:8082/api/v1/facturas/"; //TODO conectar correctamente con factura
-        FacturaDTO factura = restTemplate.postForObject(urlFactura, FacturaDTO.class, null);
+        //String urlFactura ="http://localhost:8082/api/v1/facturas/";
+        //FacturaDTO factura = restTemplate.postForObject(urlFactura, null, FacturaDTO.class);
+        //TODO conectar correctamente con factura
 
+        List<Double> brutoProducto = new ArrayList<>();
+        List<Double> totalProducto = new ArrayList<>();
         LocalDateTime fecha = LocalDateTime.now();
         Pedido pedido = new Pedido();
         pedido.setClienteId(carrito.getClienteId());
-        pedido.setFacturaId(factura.getId());
+        //pedido.setFacturaId(factura.getId());
         pedido.setFecha(fecha);
-        pedido.setTotal(carrito.getTotalTemporal());
+        for (ItemsCarrito item : carrito.getItems()) {
+            brutoProducto.add(item.getPrecioUnitario());
+            totalProducto.add(item.getPrecioUnitario() * pedido.getIva());
+        }
+        pedido.setProductoBruto(brutoProducto);
+        pedido.setProductoTotal(totalProducto);
         pedido.setEstado(EstadoPedido.PENDIENTE);
         pedido.setMetodoPago(metodoPago);
         pedido.setCuponAplicado(cupon);
         pedido.setTipoEnvio(tipoEnvio);
-        if (tipoEnvio.equals(TipoEnvio.ENVIO_RAPIDO)) {
+        if (TipoEnvio.ENVIO_RAPIDO.equals(tipoEnvio)) {
             pedido.setCostoEnvio(5000);
             pedido.setTotal(carrito.getTotalTemporal() + pedido.getCostoEnvio());
         }
-        if (tipoEnvio.equals(TipoEnvio.ENVIO_ESTANDAR)) {
-            pedido.setCostoEnvio(0);
+        if (TipoEnvio.ENVIO_ESTANDAR.equals(tipoEnvio)) {
+            pedido.setCostoEnvio(1000);
+            pedido.setTotal(carrito.getTotalTemporal() + pedido.getCostoEnvio());
         }
         pedido.setDireccion(direccion);
+        pedido.setTotal(carrito.getTotalTemporal());
         pedidoRepository.save(pedido);
 
         carrito.getItems().clear();
-        carrito.setTotalTemporal(0);
         carritoRepository.save(carrito);
 
         return pedido;
